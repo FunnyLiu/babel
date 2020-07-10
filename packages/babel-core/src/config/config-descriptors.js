@@ -284,7 +284,7 @@ export function createDescriptor(
     }
     const resolver = type === "plugin" ? loadPlugin : loadPreset;
     const request = value;
-
+    // 之后的value为require后的插件内容
     ({ filepath, value } = resolver(value, dirname));
 
     file = {

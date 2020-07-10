@@ -26,7 +26,7 @@ export function resolvePlugin(name: string, dirname: string): string | null {
 export function resolvePreset(name: string, dirname: string): string | null {
   return resolveStandardizedName("preset", name, dirname);
 }
-
+// 加载插件
 export function loadPlugin(
   name: string,
   dirname: string,
@@ -35,7 +35,7 @@ export function loadPlugin(
   if (!filepath) {
     throw new Error(`Plugin ${name} not found relative to ${dirname}`);
   }
-
+  // value为require后的插件的内容
   const value = requireModule("plugin", filepath);
   debug("Loaded plugin %o from %o.", name, dirname);
 
@@ -138,8 +138,9 @@ function resolveStandardizedName(
     throw e;
   }
 }
-
+// 用来防止循环依赖的问题
 const LOADING_MODULES = new Set();
+// require这个node模块 插件的
 function requireModule(type: string, name: string): mixed {
   if (LOADING_MODULES.has(name)) {
     throw new Error(
@@ -151,6 +152,7 @@ function requireModule(type: string, name: string): mixed {
 
   try {
     LOADING_MODULES.add(name);
+    // 加载该模块即可
     return require(name);
   } finally {
     LOADING_MODULES.delete(name);

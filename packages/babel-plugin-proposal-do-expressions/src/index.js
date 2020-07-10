@@ -1,6 +1,6 @@
 import { declare } from "@babel/helper-plugin-utils";
 import syntaxDoExpressions from "@babel/plugin-syntax-do-expressions";
-
+// 一个简单的babel插件的实现逻辑
 export default declare(api => {
   api.assertVersion(7);
 
