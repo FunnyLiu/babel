@@ -84,6 +84,7 @@ export default class TraversalContext {
 
   visitSingle(node, key): boolean {
     if (this.shouldVisit(node[key])) {
+      // 访问者队列
       return this.visitQueue([this.create(node, node, key)]);
     } else {
       return false;
@@ -122,7 +123,7 @@ export default class TraversalContext {
       // ensure we don't visit the same node twice
       if (visited.indexOf(path.node) >= 0) continue;
       visited.push(path.node);
-
+      // 逐个访问
       if (path.visit()) {
         stop = true;
         break;

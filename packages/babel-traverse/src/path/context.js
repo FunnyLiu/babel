@@ -74,6 +74,7 @@ export function visit(): boolean {
   // before calling the enter visitor, but it can be true in case of
   // a requeued node (e.g. by .replaceWith()) that is then marked
   // with .skip().
+  // 调用this.call
   if (this.shouldSkip || this.call("enter") || this.shouldSkip) {
     this.debug("Skip...");
     return this.shouldStop;

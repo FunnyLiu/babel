@@ -33,9 +33,9 @@ export default function traverse(
   if (!t.VISITOR_KEYS[parent.type]) {
     return;
   }
-
+  //初始化访问者，opts.Identifers等即为插件里书写的对应方法
   visitors.explode(opts);
-
+  // parent为抽象语法树节点 
   traverse.node(parent, opts, scope, state, parentPath);
 }
 
@@ -61,6 +61,7 @@ traverse.node = function (
   const context = new TraversalContext(scope, opts, state, parentPath);
   for (const key of keys) {
     if (skipKeys && skipKeys[key]) continue;
+    // 上下文对象
     if (context.visit(node, key)) return;
   }
 };

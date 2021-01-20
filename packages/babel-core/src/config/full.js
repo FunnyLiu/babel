@@ -284,6 +284,7 @@ const instantiatePlugin = makeWeakCache(function* (
     ...pluginObj,
   };
   if (plugin.visitor) {
+    //插件的visitor
     plugin.visitor = traverse.explode({
       ...plugin.visitor,
     });

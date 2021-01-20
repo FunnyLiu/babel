@@ -65,7 +65,32 @@
 
 ### @babel/traverse
 
-@babel/traverse 实现了访问者模式，对 AST 进行遍历，转换插件会通过它获取感兴趣的 AST 节点，对节点继续操作。
+@babel/traverse 实现了访问者模式(具体可以参考[design - 设计模式（以Typescript描述）](https://omnipotent-front-end.github.io/-Design-Patterns-Typescript/#/visitor/index?id=babel%e6%8f%92%e4%bb%b6%e4%b8%ad%e5%af%b9ast%e7%9a%84%e6%93%8d%e4%bd%9c))，对 AST 进行遍历，转换插件会通过它获取感兴趣的 AST 节点，对节点继续操作。
+
+基本用法如下：
+
+``` js
+import parser from "@babel/parser";
+import traverse from "@babel/traverse";
+
+const code = `function square(n) {
+  return n * n;
+}`;
+
+const ast = parser.parse(code);
+
+traverse(ast, {
+  enter(path) {
+    if (
+      path.node.type === "Identifier" &&
+      path.node.name === "n"
+    ) {
+      path.node.name = "x";
+    }
+  }
+```
+
+
 
 
 ### @babel/generator
@@ -463,6 +488,40 @@ Transform Plugins (转化插件) 用于对 AST 进行转换, 实现转换为 ES5
 
 
 所以我们在引入插件的时候一定要注意引入的插件是否有依赖关系
+
+
+### 插件的开发
+
+
+一个最基础的插件：
+
+``` js
+export default function (babel) {
+  const { types: t } = babel;
+  return {
+    name: "ast-transform", // not required
+    visitor: {
+      Identifier(path, state) {
+        path.node.name = path.node.name.split('').reverse().join('');
+      }
+    }
+  };
+}
+```
+
+基本上需要回传一个visitor对象，接收两个参数path和state。
+
+path代表在traverse AST过程中，通过path.node取得目前的节点，也可以用path.parent取得父节点。
+此外，path 还能通过path.traverse 來在原有的 visitor 內进行 nested visiting，這对于想要讓让visitor 在某个特定 visitor 执行后再执行时很有帮助。
+
+state是一個贯穿整個 traverse 过程的 global state，你可以在任意阶段修改 state。其中也包含你想让使用 plugin 的使用者传入的 options 设定。
+
+
+此处是通过访问者模式来完成插件的调用的，具体可以参考[design - 设计模式（以Typescript描述）](https://omnipotent-front-end.github.io/-Design-Patterns-Typescript/#/visitor/index?id=babel%e6%8f%92%e4%bb%b6%e4%b8%ad%e5%af%b9ast%e7%9a%84%e6%93%8d%e4%bd%9c)
+
+
+
+
 
 
 

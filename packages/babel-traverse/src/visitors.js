@@ -219,6 +219,8 @@ function wrapWithStateOrWrapper(oldVisitor, state, wrapper: ?Function) {
 
       if (state) {
         newFn = function (path) {
+          // 真正插件执行的Identifier、BinaryExpression等函数都是从这里入口进入的
+          // 相当于调用访问者的对应方法
           return fn.call(state, path, state);
         };
       }
