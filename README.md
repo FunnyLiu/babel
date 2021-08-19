@@ -370,10 +370,120 @@ false	npm install --save @babel/runtime
 plugin-transform-runtime 做 3 件事情
 
 1.  引入 @babel/runtime/regenerator 插件，便于转化 generator 函数
+
 2.  通过引入 corejs 来解决全局变量污染的问题
+
 3.  将 helper 函数从外部引入，而不是每个需要的地方生成，减少重复代码
 
+比如class关键词的转换这样。
 
+``` js
+{
+  "presets": [
+    [
+      "@babel/preset-env",
+      {
+        "useBuiltIns": "usage",
+        "debug": true
+      }
+    ]
+  ],
+  "plugins": [
+    [
+      "@babel/plugin-transform-runtime",
+      {
+        "corejs": 3 // 指定 runtime-corejs 的版本，目前有 2 3 两个版本
+      }
+    ]
+  ]
+}
+```
+
+如果配置了corejs的话，是需要依赖其他包配合，比如[@babel/runtime-corejs3](https://www.npmjs.com/package/@babel/runtime-corejs3)。
+
+他的作用就是将core-js原本修改原型的逻辑，改成自己实现一套函数。
+
+比如下图这样，从而保证不污染Array的原型。
+
+<img src="https://raw.githubusercontent.com/brizer/graph-bed/master/img/20210819143508.png"/>
+
+
+### @babel/preset-react
+
+针对react的预设集合。
+
+preset的本质就是插件的集合。
+
+其实现如下：
+
+``` js
+import { declare } from "@babel/helper-plugin-utils";
+import transformReactJSX from "@babel/plugin-transform-react-jsx";
+import transformReactJSXDevelopment from "@babel/plugin-transform-react-jsx-development";
+import transformReactDisplayName from "@babel/plugin-transform-react-display-name";
+import transformReactJSXSource from "@babel/plugin-transform-react-jsx-source";
+import transformReactJSXSelf from "@babel/plugin-transform-react-jsx-self";
+import transformReactPure from "@babel/plugin-transform-react-pure-annotations";
+
+export default declare((api, opts) => {
+  api.assertVersion(7);
+
+  let { pragma, pragmaFrag } = opts;
+
+  const {
+    pure,
+    throwIfNamespace = true,
+    useSpread,
+    runtime = "classic",
+    importSource,
+  } = opts;
+
+  // TODO: (Babel 8) Remove setting these defaults
+  if (runtime === "classic") {
+    pragma = pragma || "React.createElement";
+    pragmaFrag = pragmaFrag || "React.Fragment";
+  }
+
+  // TODO: (Babel 8) Don't cast these options but validate it
+  const development = !!opts.development;
+  const useBuiltIns = !!opts.useBuiltIns;
+
+  if (typeof development !== "boolean") {
+    throw new Error(
+      "@babel/preset-react 'development' option must be a boolean.",
+    );
+  }
+
+  const transformReactJSXPlugin =
+    runtime === "automatic" && development
+      ? transformReactJSXDevelopment
+      : transformReactJSX;
+
+  return {
+    plugins: [
+      [
+        transformReactJSXPlugin,
+        {
+          importSource,
+          pragma,
+          pragmaFrag,
+          runtime,
+          throwIfNamespace,
+          useBuiltIns,
+          useSpread,
+          pure,
+        },
+      ],
+      transformReactDisplayName,
+      pure !== false && transformReactPure,
+
+      development && runtime === "classic" && transformReactJSXSource,
+      development && runtime === "classic" && transformReactJSXSelf,
+    ].filter(Boolean),
+  };
+});
+
+```
 
 
 ## 知识点
@@ -519,7 +629,12 @@ state是一個贯穿整個 traverse 过程的 global state，你可以在任意�
 
 此处是通过访问者模式来完成插件的调用的，具体可以参考[design - 设计模式（以Typescript描述）](https://omnipotent-front-end.github.io/-Design-Patterns-Typescript/#/visitor/index?id=babel%e6%8f%92%e4%bb%b6%e4%b8%ad%e5%af%b9ast%e7%9a%84%e6%93%8d%e4%bd%9c)
 
+可以参考brizer的简单插件：[babelDemo/easyPlugin at master · FunnyLiu/babelDemo](https://github.com/FunnyLiu/babelDemo/tree/master/easyPlugin)
 
+
+### polyfill时，如何保证不污染原型。
+
+默认情况下，babel通过core-js来做api的polyfill，但是会污染各个对象的原型，想要不污染的话，需要配置@babel/plugin-transform-runtime和@babel/runtime-corejs3来完成。可以参考[笔记内容](https://github.com/FunnyLiu/babel/blob/readsource/README.md#babelplugin-transform-runtime%E4%B8%8E-babel-runtime-%E9%85%8D%E5%90%88%E4%BD%BF%E7%94%A8)
 
 
 
